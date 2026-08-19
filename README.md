@@ -42,14 +42,30 @@ effective_importance =
 
 ## 配置
 
+插件注册了 DSH settings namespace `dsh-mnemon-gc`，配置持久化在 `~/.dsh/settings.yaml`，支持热更新（修改后无需重启）。
+
 ```yaml
-threshold: 0.5          # 有效重要性阈值
-maxAgeDays: 30          # 无访问超过 N 天才算 stale
-intervalMs: 86400000    # 自动巡检间隔（默认 24h）
-limit: 500              # 每个 store 的候选上限
-cliPath: ""             # 可选，显式覆盖 mnemon CLI 路径（默认交给 dsh-mnemon 解析）
-dataDir: ""             # 可选，覆盖数据目录
+dsh-mnemon-gc:
+  threshold: 0.5          # 有效重要性阈值
+  maxAgeDays: 30          # 无访问超过 N 天才算 stale
+  intervalMs: 86400000    # 自动巡检间隔（默认 24h）
+  limit: 500              # 每个 store 的候选上限
+  cliPath: ""             # 可选，显式覆盖 mnemon CLI 路径（默认交给 dsh-mnemon 解析）
+  dataDir: ""             # 可选，覆盖数据目录（设了它 storageScope 会切到 custom）
 ```
+
+字段说明：
+
+| 字段 | 默认 | 说明 |
+|---|---|---|
+| `threshold` | 0.5 | 有效重要性阈值（低于它才可能 stale） |
+| `maxAgeDays` | 30 | 无访问超过 N 天才算 stale |
+| `intervalMs` | 86400000 | 自动巡检间隔（最小 60s，最大 30 天） |
+| `limit` | 500 | 每个 store 的候选上限（1–1000） |
+| `cliPath` | 空 | 显式覆盖 mnemon CLI 路径；空则交给 dsh-mnemon 的 findMnemonCommand 解析 |
+| `dataDir` | 空 | 显式覆盖数据目录；非空时 storageScope 自动切 custom |
+
+`cordis.patch.yml` 里的 `config` 是 base 层（默认值）；`settings.yaml` 的 `dsh-mnemon-gc` 段是 user 层（覆盖）。两者合并后生效。
 
 ## 安装
 
