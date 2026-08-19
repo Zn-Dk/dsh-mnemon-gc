@@ -1,0 +1,40 @@
+{
+  "name": "dsh-mnemon-gc",
+  "version": "0.1.0",
+  "description": "Mnemon 记忆体 GC 治理插件：把 mnemon CLI 原生的有效重要性衰减模型接进 dsh-mnemon，提供事件驱动的保守巡检（默认只报告）与受监督的软删除。基于 dsh-mnemon 的 createRunner 公共 API。",
+  "type": "module",
+  "main": "lib/index.js",
+  "exports": {
+    ".": {
+      "default": "./lib/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib",
+    "cordis.patch.yml",
+    "README.md"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Zn-Dk/dsh-mnemon-gc.git"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
+  "peerDependencies": {
+    "dsh-mnemon": ">=0.2.9"
+  },
+  "scripts": {
+    "test": "node --test test/*.test.mjs"
+  }
+}

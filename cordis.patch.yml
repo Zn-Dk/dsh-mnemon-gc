@@ -1,0 +1,15 @@
+# dsh-mnemon-gc bundle patch.
+# `dsh plugin --profile web add <path>` installs the package and appends it
+# to dsh.profile.bundles, applying this layer.
+#
+# 自动巡检只报告、绝不删除；purge 必须通过工具/命令显式触发。
+- insert:
+    - id: mnemon-gc
+      name: dsh-mnemon-gc
+      config:
+        threshold: 0.5
+        maxAgeDays: 30
+        intervalMs: 86400000
+        limit: 500
+        # cliPath: /path/to/mnemon   # 可选，显式覆盖 CLI 路径
+        # dataDir: /path/to/.mnemon  # 可选，覆盖数据目录

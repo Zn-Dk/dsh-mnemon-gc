@@ -1,0 +1,18 @@
+# dependencies
+node_modules/
+
+# build output
+lib/types/
+
+# logs
+*.log
+logs/
+
+# local dev records (decision log kept out of git)
+_dev/
+_dev-notes/
+*.local.md
+
+# OS/editor
+.DS_Store
+*.swp
