@@ -29,6 +29,15 @@ effective_importance =
 
 其余低分候选判为 `watch`（只报告），免疫条目 `immune`（不碰）。
 
+## 设置界面
+
+「设置 → Mnemon GC」卡片（client settings.section slot）提供 6 个字段的可视化编辑，即时热更新：
+
+- threshold / maxAgeDays / intervalMs / limit（数字）
+- cliPath / dataDir（文本，留空表示默认）
+
+卡片通过 host 侧 `/dsh-mnemon-gc-settings` RPC 通道读写 settings namespace。
+
 ## 触发方式（决策 D 混合）
 
 | 方式 | 行为 | 默认 |
@@ -42,7 +51,7 @@ effective_importance =
 
 ## 配置
 
-插件注册了 DSH settings namespace `dsh-mnemon-gc`，配置持久化在 `~/.dsh/settings.yaml`，支持热更新（修改后无需重启）。
+插件注册了 DSH settings namespace `dsh-mnemon-gc`，配置持久化在 `~/.dsh/settings.yaml`，支持热更新（修改后无需重启）。同时提供 **Web 设置卡片**（「设置 → Mnemon GC」）可在 GUI 里直接改这 6 个字段。
 
 ```yaml
 dsh-mnemon-gc:
