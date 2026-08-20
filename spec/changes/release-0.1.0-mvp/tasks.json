@@ -1,0 +1,149 @@
+# 实施任务
+```json
+[
+  {
+    "number": 1,
+    "category": "阶段 1：核心引擎与适配层",
+    "task": "候选分级引擎与 mnemon gc 输出适配（纯逻辑，可单测）",
+    "steps": [
+      {
+        "step": "engine.js：classifyCandidate 三档分级（immune/stale/watch），复刻 mnemon 免疫规则",
+        "completed": true
+      },
+      {
+        "step": "engine.js：summarizeTiers 聚合计数",
+        "completed": true
+      },
+      {
+        "step": "cli-adapter.js：解析 mnemon gc 的 JSON 输出为内部候选结构",
+        "completed": true
+      },
+      {
+        "step": "engine + cli-adapter 单测覆盖（含边界：immune 边界值、effective_importance 缺失）",
+        "completed": true
+      }
+    ],
+    "passes": true
+  },
+  {
+    "number": 2,
+    "category": "阶段 2：编排层",
+    "task": "巡检/清理编排：单次巡检结果驱动 forget，错误契约明确",
+    "steps": [
+      {
+        "step": "orchestrator.js：runInspection 只读巡检，失败向上抛错",
+        "completed": true
+      },
+      {
+        "step": "orchestrator.js：runPurge 复用同一次巡检结果执行 forget，单条失败仅计数",
+        "completed": true
+      },
+      {
+        "step": "orchestrator 单测覆盖（含 forget 部分失败、mnemon CLI 不存在时的错误传播）",
+        "completed": true
+      }
+    ],
+    "passes": true
+  },
+  {
+    "number": 3,
+    "category": "阶段 3：插件装配（Host 侧）",
+    "task": "cordis 插件入口：事件驱动自动巡检 + 手动工具/命令 + 生命周期",
+    "steps": [
+      {
+        "step": "index.js：per-root-agent turn-stopping 监听，通过 agent.ctx.effect 绑定生命周期",
+        "completed": true
+      },
+      {
+        "step": "index.js：intervalMs 节流，自动巡检路径强制只读（不触发 purge）",
+        "completed": true
+      },
+      {
+        "step": "index.js：mnemon_gc_inspect / mnemon_gc_purge 工具，/mnemon-gc 命令",
+        "completed": true
+      },
+      {
+        "step": "code review 修复：cliPath/dataDir 不再硬编码开发机路径，改为可配置项",
+        "completed": true
+      },
+      {
+        "step": "code review 修复：resolveRunner 按 dataDir 是否显式配置切换 storageScope（custom/global）",
+        "completed": true
+      }
+    ],
+    "passes": true
+  },
+  {
+    "number": 4,
+    "category": "阶段 4：配置可视化（settings namespace + GUI）",
+    "task": "Host settings namespace 注册 + Web 设置卡片",
+    "steps": [
+      {
+        "step": "index.js：ctx.settings.register('dsh-mnemon-gc', Config, {applies:'live'})，热更新",
+        "completed": true
+      },
+      {
+        "step": "settings-rpc.js：/dsh-mnemon-gc-settings RPC 通道（get/mutate），字段白名单校验",
+        "completed": true
+      },
+      {
+        "step": "client.js：settings.section slot 卡片，排版对齐 dsh-mnemon 的 MnemonSettingsCard 视觉规范",
+        "completed": true
+      },
+      {
+        "step": "settings-rpc 单测覆盖（白名单拒绝、read-only 拒绝）",
+        "completed": true
+      },
+      {
+        "step": "浏览器实机验证卡片渲染与交互（用户截图确认排版正常）",
+        "completed": true
+      }
+    ],
+    "passes": true
+  },
+  {
+    "number": 5,
+    "category": "阶段 5：发布基础设施",
+    "task": "对齐蓝本插件（dsh-tencent-token-dashboard）的发布模式",
+    "steps": [
+      {
+        "step": "建立 CHANGELOG.md（Keep a Changelog + SemVer 格式），记录 0.1.0 全部 feature",
+        "completed": false
+      },
+      {
+        "step": "确认 package.json 的 files 字段包含 CHANGELOG.md",
+        "completed": false
+      },
+      {
+        "step": "补充 README 的发布/安装说明，标注 pnpm pack + 直链安装为推荐方式（对齐蓝本，规避 link: 缺依赖问题）",
+        "completed": false
+      },
+      {
+        "step": "验证 npm test / pnpm pack 在干净环境下可执行（无本机路径硬编码残留）",
+        "completed": false
+      }
+    ],
+    "passes": false
+  },
+  {
+    "number": 6,
+    "category": "阶段 6：验收与收尾",
+    "task": "MVP 验收确认与提案归档",
+    "steps": [
+      {
+        "step": "确认 32 个单测全绿、端到端 mnemon CLI 真实调用验证记录完整",
+        "completed": true
+      },
+      {
+        "step": "本提案（proposal/tasks/spec-delta）通过验证检查（grep ADDED/Requirement/Scenario 格式）",
+        "completed": false
+      },
+      {
+        "step": "提交 git commit：chore(release): 0.1.0 + CHANGELOG",
+        "completed": false
+      }
+    ],
+    "passes": false
+  }
+]
+```

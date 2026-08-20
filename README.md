@@ -78,6 +78,8 @@ dsh-mnemon-gc:
 
 ## 安装
 
+### 方式 A：源码目录安装（本地开发）
+
 ```sh
 cd dsh-mnemon-gc
 pnpm install
@@ -85,7 +87,18 @@ dsh plugin --profile web add "link:/root/proj/dsh-proj/dsh-mnemon-gc"
 dsh web
 ```
 
-> 注意：安装出树插件后需先 `pnpm install` 再重启 `dsh web`。
+> `link:` 安装不会自动把插件自身依赖（`dsh-mnemon` / `schemastery`）装进 profile，可能报 `ERR_MODULE_NOT_FOUND`。本地自测建议先确认 `pnpm install` 在插件目录内完整跑过；正式分发优先用方式 B（对齐蓝本插件 `dsh-tencent-token-dashboard` 的已验证模式）。
+
+### 方式 B：发布包 .tgz 直链安装（推荐）
+
+```sh
+pnpm pack   # 生成 dsh-mnemon-gc-<version>.tgz
+dsh plugin --profile web add ./dsh-mnemon-gc-<version>.tgz
+```
+
+已安装旧版本时，用同样的 `add` 命令安装新 tarball 即可覆盖更新。
+
+重启 `dsh web` 后，「设置 → Mnemon GC」出现设置卡片。
 
 ## 测试
 
@@ -93,7 +106,11 @@ dsh web
 node --test test/*.test.mjs
 ```
 
-三个 seam：`engine`（分级纯函数）、`cli-adapter`（gc JSON 解析）、`orchestrator`（巡检/清理编排，注入 fake runner）。
+五个 seam：`engine`（分级纯函数）、`cli-adapter`（gc JSON 解析）、`orchestrator`（巡检/清理编排，注入 fake runner）、`config`（settings 值解析）、`settings-rpc`（settings 通道纯逻辑）。
+
+## 版本与发布
+
+版本号遵循 [语义化版本](https://semver.org/lang/zh-CN/)，变更记录见 [CHANGELOG.md](./CHANGELOG.md)（格式遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)）。每次面向用户的变更按 `新增`（feature）/ `修复`（fix）/ `变更`（chore/breaking）分级记录，并同步递增 `package.json` 的 `version`。
 
 ## 与方案 A 的关系
 

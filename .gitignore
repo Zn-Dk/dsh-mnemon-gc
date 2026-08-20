@@ -13,6 +13,9 @@ _dev/
 _dev-notes/
 *.local.md
 
+# pnpm pack output (发布时手动 git add -f 特定版本 tgz，日常不追踪)
+*.tgz
+
 # OS/editor
 .DS_Store
 *.swp

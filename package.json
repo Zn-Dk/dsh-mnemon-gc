@@ -16,7 +16,8 @@
   "files": [
     "lib",
     "cordis.patch.yml",
-    "README.md"
+    "README.md",
+    "CHANGELOG.md"
   ],
   "license": "MIT",
   "repository": {
@@ -48,6 +49,7 @@
     "schemastery": "^3.18.0"
   },
   "scripts": {
-    "test": "node --test test/*.test.mjs"
+    "test": "node --test test/*.test.mjs",
+    "pack": "pnpm pack"
   }
 }
