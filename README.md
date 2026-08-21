@@ -8,26 +8,21 @@ Mnemon 记忆体 GC 治理插件。把 mnemon CLI 原生的**有效重要性衰�
 
 dsh-mnemon 的三层记忆里，第三层（记忆体）由 mnemon CLI 引擎支撑。mnemon 本身内置了完整的衰减/GC 模型，但 dsh-mnemon 从未调用 `mnemon gc`，也不读 `effective_importance` / `access_count` / `immune` 字段，低价值记忆会一直积累。本插件把这套能力接出来。
 
-## 治理模型（mnemon 原生）
+## 治理模型（0.2.0：正确性纠错，不再是时间衰减）
 
-```text
-effective_importance =
-    base_weight(importance)            # 5→1.0  4→0.8  3→0.5  2→0.3  1→0.15
-  * max(1, log(1 + access_count))
-  * 0.5 ^ (days_since_access / 30)     # 30 天无访问减半
-  * (1 + 0.1 * min(edges, 5))
+gc 的判据是「记忆是否被更新的记忆取代（superseded）」，**不是**「多久没被访问」。久未引用的历史记忆只要仍正确就不会被建议清理。
 
-免疫线：importance >= 4 或 access_count >= 3（永不 GC）
-```
+冲突检测：同 category 的记忆两两配对（免疫候选除外），由 LLM 子代理判断「新事实是否覆盖旧事实」。命中后默认**标记 superseded**（以 causal edge 记录取代关系与理由），旧记忆保留可追溯。
 
-## 分级（比 mnemon gc 更保守）
+## 分级
 
-候选只有同时满足下面条件才判为 `stale`（可清理）：
+| tier | 含义 | 会删除吗 |
+|---|---|---|
+| `immune` | importance>=4 或 access_count>=3，或已标记 immune | 绝不 |
+| `superseded` | 冲突检测命中（被更新的记忆取代） | 仅显式确认后 |
+| `watch` | 其余全部（含久未访问但正确） | 绝不 |
 
-1. mnemon 判定非免疫低价值（`effective_importance < threshold` 且 `importance < 4` 且 `access_count < 3`）；
-2. `days_since_access >= maxAgeDays`（默认 30 天）。
-
-其余低分候选判为 `watch`（只报告），免疫条目 `immune`（不碰）。
+新鲜度字段（创建时间/引用次数/有效重要性）仅用于排序与人工审阅，绝不单独作为删除依据。
 
 ## 设置界面
 

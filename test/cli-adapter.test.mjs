@@ -61,6 +61,7 @@ test('normalizeCandidate 提取字段并保留 immune 标记', () => {
     daysSinceAccess: 0.0,
     edgeCount: 2,
     immune: false,
+    conflictDetected: false,
   })
 })
 
@@ -82,6 +83,7 @@ test('normalizeCandidate 容忍缺失可选字段（默认 0/空串）', () => {
     daysSinceAccess: 1.5,
     edgeCount: 1,
     immune: false,
+    conflictDetected: false,
   })
 })
 
