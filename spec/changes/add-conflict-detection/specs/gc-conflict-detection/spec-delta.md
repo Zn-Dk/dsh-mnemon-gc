@@ -58,6 +58,22 @@ WHEN 用户显式触发批量删除 superseded 记忆,
 系统 SHALL 仅删除已标记为 superseded 的记忆
 AND 系统 SHALL 拒绝删除任何未标记 superseded 的记忆。
 
+### Requirement: 批量删除的确认形式
+WHEN 用户触发批量删除 superseded 记忆,
+系统 SHALL 展示一个二次确认界面，而非浏览器原生 window.confirm 对话框。
+
+#### Scenario: 确认前展示清单与不可恢复警示
+GIVEN 用户勾选若干条 superseded 记忆并触发批量删除
+WHEN 确认界面出现
+THEN 界面列出即将删除的每一条记忆的内容摘要
+AND 界面显示不可恢复的红色警示
+AND 仅当用户明确点击确认后系统才执行删除
+
+#### Scenario: 删除后展示结果清单
+GIVEN 批量删除已执行
+WHEN 删除完成
+THEN 系统展示结果清单，区分已删除与删除失败的记忆
+
 ### Requirement: 新鲜度字段仅作辅助信号
 系统 SHALL 将 created_at / access_count / last_accessed_at / effective_importance 仅用于排序、人工审阅与免疫判定，绝不单独作为删除依据。
 
