@@ -1,0 +1,149 @@
+# 实施任务
+```json
+[
+  {
+    "number": 1,
+    "category": "阶段 1：语义与引擎重构",
+    "task": "把 engine.js 的 tier 语义从时间衰减改为冲突驱动",
+    "steps": [
+      {
+        "step": "废弃 classifyCandidate 中 days_since_access >= maxAgeDays 的 stale 判定路径",
+        "completed": false
+      },
+      {
+        "step": "新增 tier：superseded（冲突检测命中）、watch（观察项供人工审阅）、immune（保留）",
+        "completed": false
+      },
+      {
+        "step": "新鲜度字段（access_count/created_at/effective_importance）降级为排序/免疫信号，不再参与删除判定",
+        "completed": false
+      },
+      {
+        "step": "重写 engine 单测，覆盖「久未访问但正确 → 不判 superseded」",
+        "completed": false
+      }
+    ],
+    "passes": false
+  },
+  {
+    "number": 2,
+    "category": "阶段 2：冲突检测子代理",
+    "task": "实现「记忆间冲突检测」LLM 子代理流程",
+    "steps": [
+      {
+        "step": "设计检测请求：把候选记忆内容 + 近期新记忆内容打包给子代理，让其判断「新事实是否覆盖旧事实」",
+        "completed": false
+      },
+      {
+        "step": "实现候选初筛（轻量规则，避免全量调 LLM）：近期有同类新记忆写入的才进入检测",
+        "completed": false
+      },
+      {
+        "step": "实现检测结果结构化输出：{旧记忆id, 被取代, 取代证据, 理由}",
+        "completed": false
+      },
+      {
+        "step": "为子代理调用写单测（fake subagent 注入）",
+        "completed": false
+      }
+    ],
+    "passes": false
+  },
+  {
+    "number": 3,
+    "category": "阶段 3：superseded 标记与删除",
+    "task": "实现标记 superseded 与显式删除",
+    "steps": [
+      {
+        "step": "定义 superseded 的存储方式（优先 mnemon 现有 edge/link，记录「被谁取代」；或用 tag 承载）",
+        "completed": false
+      },
+      {
+        "step": "实现 mark_superseded 操作（保留原记忆，记录取代关系，不软删）",
+        "completed": false
+      },
+      {
+        "step": "实现显式删除 superseded 操作（单条 + 批量，批量仅限已标记 superseded 的记忆）",
+        "completed": false
+      },
+      {
+        "step": "为标记/删除写单测（覆盖「未标记 superseded 的记忆不可批量删」）",
+        "completed": false
+      }
+    ],
+    "passes": false
+  },
+  {
+    "number": 4,
+    "category": "阶段 4：工具/命令/自动巡检接线",
+    "task": "把新语义接进插件装配层",
+    "steps": [
+      {
+        "step": "自动巡检改为「检测 + 报告疑似冲突」，零删除、零标记",
+        "completed": false
+      },
+      {
+        "step": "新增工具 mnemon_gc_detect_conflicts / mnemon_gc_mark_superseded / mnemon_gc_purge_superseded",
+        "completed": false
+      },
+      {
+        "step": "新增命令 /mnemon-gc conflicts|mark|purge-superseded",
+        "completed": false
+      },
+      {
+        "step": "废弃旧 mnemon_gc_purge（删除 stale）语义，改为删除 superseded 或直接移除",
+        "completed": false
+      }
+    ],
+    "passes": false
+  },
+  {
+    "number": 5,
+    "category": "阶段 5：前端视图扩展",
+    "task": "新鲜度视图增加冲突标记与批量删除",
+    "steps": [
+      {
+        "step": "列表增加「冲突状态」列（superseded / 疑似冲突 / 正常）",
+        "completed": false
+      },
+      {
+        "step": "疑似冲突候选展示「取代证据 + 理由」，人工确认后标记 superseded",
+        "completed": false
+      },
+      {
+        "step": "视图勾选 + 批量删除 superseded 按钮",
+        "completed": false
+      },
+      {
+        "step": "批量删除仅作用于 superseded，且二次确认",
+        "completed": false
+      }
+    ],
+    "passes": false
+  },
+  {
+    "number": 6,
+    "category": "阶段 6：验收与发布",
+    "task": "破坏性变更验收与 0.2.0 发布",
+    "steps": [
+      {
+        "step": "端到端验证：构造「记忆间冲突」fixture，确认检测→标记→批量删除全链路，且「久未访问但正确」记忆不被触碰",
+        "completed": false
+      },
+      {
+        "step": "CHANGELOG 记录破坏性变更（gc 语义从时间衰减改为正确性纠错），版本 0.1.0 → 0.2.0",
+        "completed": false
+      },
+      {
+        "step": "README 治理模型章节重写",
+        "completed": false
+      },
+      {
+        "step": "本提案验证通过后归档到 spec/changes/archive/",
+        "completed": false
+      }
+    ],
+    "passes": false
+  }
+]
+```
