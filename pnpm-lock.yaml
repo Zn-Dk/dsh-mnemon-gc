@@ -11,6 +11,9 @@ importers:
       dsh-mnemon:
         specifier: '>=0.2.9'
         version: 0.2.9(@deepseek-ai/dsh-client-ui-primitives@0.1.0-rc.7(@deepseek-ai/cordis@4.0.1)(@deepseek-ai/dsh-invariants@0.1.0-rc.7(@deepseek-ai/cordis@4.0.1)))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      schemastery:
+        specifier: ^3.18.0
+        version: 3.18.0
 
 packages:
 

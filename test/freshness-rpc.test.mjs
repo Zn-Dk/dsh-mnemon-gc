@@ -41,6 +41,13 @@ test('list 支持排序参数', async () => {
   assert.deepEqual(res.value.items.map(i => i.id), ['b', 'a'])
 })
 
+test('list 支持 state 排序并返回 protected 状态', async () => {
+  const handler = createFreshnessRpcHandler(makeDbFactory())
+  const res = await handler('list', { orderBy: 'state', direction: 'asc' })
+  assert.deepEqual(res.value.items.map(i => i.status), ['normal', 'protected'])
+  assert.equal(res.value.items[1].protected, true)
+})
+
 test('forget 端点按 id 精确软删', async () => {
   // 用临时文件 db 保证 forget 后重开连接能看到删除效果
   const { mkdtempSync } = await import('node:fs')

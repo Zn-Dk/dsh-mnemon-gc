@@ -52,6 +52,15 @@ test('normalizeFreshnessRow 字段归一化', () => {
   })
 })
 
+test('listFreshness 返回状态并按状态排序', () => {
+  const db = makeDb(); seed(db)
+  const rows = listFreshness(db, { orderBy: 'state', direction: 'asc' })
+  assert.deepEqual(rows.map(r => r.status), ['normal', 'protected', 'protected'])
+  assert.deepEqual(new Set(rows.map(r => r.id)), new Set(['a', 'b', 'd']))
+  assert.equal(rows.find(r => r.id === 'a').protected, false)
+  assert.equal(rows.find(r => r.id === 'b').protected, true)
+})
+
 test('listFreshness 拒绝非法排序列', () => {
   const db = makeDb(); seed(db)
   assert.throws(() => listFreshness(db, { orderBy: 'bogus' }), /orderBy/)

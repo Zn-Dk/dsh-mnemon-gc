@@ -1,12 +1,12 @@
 # dsh-mnemon-gc
 
-Mnemon 记忆体 GC 治理插件。把 mnemon CLI 原生的**有效重要性衰减模型**接进 [dsh-mnemon](https://github.com/omdsh-dev/dsh-mnemon)，提供事件驱动的保守巡检与受监督的软删除。
+Mnemon 记忆体 GC 治理插件。基于 [dsh-mnemon](https://github.com/omdsh-dev/dsh-mnemon) 的公共 API（`createRunner` / `resolveConfig`），把「冲突驱动的正确性纠错」接入 DSH：检测记忆间新事实取代旧事实、默认标记 superseded、仅在显式确认后软删除。自动巡检只报告、绝不删除。
 
 > **声明**：本插件基于 dsh-mnemon 的公共 API（`createRunner` / `resolveConfig`）开发，是独立的正交扩展，不 fork、不改动 dsh-mnemon。定位为「可向上游提 PR 的原型」。
 
 ## 背景
 
-dsh-mnemon 的三层记忆里，第三层（记忆体）由 mnemon CLI 引擎支撑。mnemon 本身内置了完整的衰减/GC 模型，但 dsh-mnemon 从未调用 `mnemon gc`，也不读 `effective_importance` / `access_count` / `immune` 字段，低价值记忆会一直积累。本插件把这套能力接出来。
+dsh-mnemon 的三层记忆里，第三层（记忆体）由 mnemon CLI 引擎支撑。mnemon 自身并不直接对「记忆内容是否已被更新的记忆取代」做纠错，过时记忆会与新事实并存积累。本插件把这套冲突检测能力接出来，作为独立的治理入口。
 
 ## 治理模型（0.2.0：正确性纠错，不再是时间衰减）
 
@@ -26,32 +26,33 @@ gc 的判据是「记忆是否被更新的记忆取代（superseded）」，**�
 
 ## 设置界面
 
-「设置 → Mnemon GC」卡片（client settings.section slot）提供 6 个字段的可视化编辑，即时热更新：
+「设置 → Mnemon GC」卡片（client settings.section slot）提供可视化编辑，即时热更新，并内嵌「记忆新鲜度」面板（只读列表 + 关键词搜索 + 状态筛选 + 排序/分页 + 详情查看 + 受监督的单条/批量删除）：
 
-- threshold / maxAgeDays / intervalMs / limit（数字）
-- cliPath / dataDir（文本，留空表示默认）
+- 巡检策略：threshold / maxAgeDays / intervalMs / limit（数字，其中 threshold 与 maxAgeDays 仅为辅助字段）
+- 运行位置：cliPath / dataDir（文本，留空表示默认）
 
-卡片通过 host 侧 `/dsh-mnemon-gc-settings` RPC 通道读写 settings namespace。
+卡片通过 host 侧 `/dsh-mnemon-gc-settings` RPC 通道读写 settings namespace；新鲜度面板通过 `/dsh-mnemon-gc-freshness` RPC 通道读写记忆列表与删除动作。
 
-## 触发方式（决策 D 混合）
+## 触发方式
 
 | 方式 | 行为 | 默认 |
 |---|---|---|
 | 自动巡检 | `agent/turn-stopping` 后，距上次巡检 `>= intervalMs` 触发 | 开，24h，**只报告** |
-| 工具 `mnemon_gc_inspect` | 只读巡检，返回 immune/stale/watch | 模型可调 |
-| 工具 `mnemon_gc_purge` | 软删除 stale 候选 | 模型可调（显式） |
-| 命令 `/mnemon-gc inspect|purge [store]` | 手动触发 | 用户可用 |
+| 工具 `mnemon_gc_inspect` | 只读巡检，返回 immune/superseded/watch 三级 | 模型可调 |
+| 工具 `mnemon_gc_mark_superseded` | 标记一条记忆被另一条取代（写 causal edge，不删除） | 模型可调（显式） |
+| 工具 `mnemon_gc_purge_superseded` | 批量删除**已标记 superseded** 的记忆（未标记的自动拒绝） | 模型可调（显式） |
+| 命令 `/mnemon-gc inspect|conflicts|mark|purge-superseded` | 手动触发 | 用户可用 |
 
-**安全边界**：巡检带 `--readonly` 绝不写库；purge 走 `mnemon forget`（软删除，可恢复）；自动巡检**只报告，绝不删除**（无 autoPurge 配置项）。
+**安全边界**：巡检带 `--readonly` 绝不写库；purge 走 `mnemon forget`（软删除，可恢复）且只删「已标记 superseded」的记忆；自动巡检**只报告，绝不删除**（无 autoPurge 配置项）。
 
 ## 配置
 
-插件注册了 DSH settings namespace `dsh-mnemon-gc`，配置持久化在 `~/.dsh/settings.yaml`，支持热更新（修改后无需重启）。同时提供 **Web 设置卡片**（「设置 → Mnemon GC」）可在 GUI 里直接改这 6 个字段。
+插件注册了 DSH settings namespace `dsh-mnemon-gc`，配置持久化在 `~/.dsh/settings.yaml`，支持热更新（修改后无需重启）。同时提供 **Web 设置卡片**（「设置 → Mnemon GC」）可在 GUI 里直接改这些字段。
 
 ```yaml
 dsh-mnemon-gc:
-  threshold: 0.5          # 有效重要性阈值
-  maxAgeDays: 30          # 无访问超过 N 天才算 stale
+  threshold: 0.5          # 有效重要性阈值（仅辅助排序/审阅）
+  maxAgeDays: 30          # 无访问 N 天（仅辅助信号，不构成删除依据）
   intervalMs: 86400000    # 自动巡检间隔（默认 24h）
   limit: 500              # 每个 store 的候选上限
   cliPath: ""             # 可选，显式覆盖 mnemon CLI 路径（默认交给 dsh-mnemon 解析）
@@ -62,12 +63,14 @@ dsh-mnemon-gc:
 
 | 字段 | 默认 | 说明 |
 |---|---|---|
-| `threshold` | 0.5 | 有效重要性阈值（低于它才可能 stale） |
-| `maxAgeDays` | 30 | 无访问超过 N 天才算 stale |
+| `threshold` | 0.5 | 有效重要性阈值（辅助排序/审阅，不单独决定删除） |
+| `maxAgeDays` | 30 | 无访问 N 天（辅助信号，不构成删除依据） |
 | `intervalMs` | 86400000 | 自动巡检间隔（最小 60s，最大 30 天） |
 | `limit` | 500 | 每个 store 的候选上限（1–1000） |
 | `cliPath` | 空 | 显式覆盖 mnemon CLI 路径；空则交给 dsh-mnemon 的 findMnemonCommand 解析 |
 | `dataDir` | 空 | 显式覆盖数据目录；非空时 storageScope 自动切 custom |
+
+> 删除只由「superseded 标记」决定：阈值与 maxAgeDays 仅用于新鲜度视图的排序/审阅，绝不单独作为删除依据。
 
 `cordis.patch.yml` 里的 `config` 是 base 层（默认值）；`settings.yaml` 的 `dsh-mnemon-gc` 段是 user 层（覆盖）。两者合并后生效。
 
@@ -101,7 +104,7 @@ dsh plugin --profile web add ./dsh-mnemon-gc-<version>.tgz
 node --test test/*.test.mjs
 ```
 
-五个 seam：`engine`（分级纯函数）、`cli-adapter`（gc JSON 解析）、`orchestrator`（巡检/清理编排，注入 fake runner）、`config`（settings 值解析）、`settings-rpc`（settings 通道纯逻辑）。
+seam：`engine`（冲突驱动分级纯函数）、`conflict-detector`（初筛 + LLM prompt + 结果解析）、`superseded`（causal edge 标记/收集/过滤）、`cli-adapter`（gc JSON 解析）、`orchestrator`（巡检/清理编排，注入 fake runner）、`config`（settings 值解析）、`settings-rpc` / `freshness` / `freshness-rpc`（settings 通道与新鲜度视图纯逻辑）。
 
 ## 版本与发布
 
