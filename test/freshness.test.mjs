@@ -1,10 +1,10 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { DatabaseSync } from 'node:sqlite'
-import { listFreshness, forgetById, normalizeFreshnessRow } from '../lib/freshness.js'
+import { listFreshness, readFreshness, sortFreshness, forgetById, normalizeFreshnessRow } from '../lib/freshness.js'
 
 // seam：新鲜度 provider 纯逻辑（注入内存 sqlite）。
-// 验证列表排序、只列未删除、按 id 精确软删（不经过 gc 分级）。
+// 验证列表排序、只列未删除、按 id 精确软删（不经过 gc 分级）、合并层统一排序。
 
 function makeDb() {
   const db = new DatabaseSync(':memory:')
@@ -65,6 +65,42 @@ test('listFreshness 拒绝非法排序列', () => {
   const db = makeDb(); seed(db)
   assert.throws(() => listFreshness(db, { orderBy: 'bogus' }), /orderBy/)
   assert.throws(() => listFreshness(db, { direction: 'sideways' }), /direction/)
+})
+
+test('readFreshness 返回未排序行（供合并层排序）', () => {
+  const db = makeDb(); seed(db)
+  const rows = readFreshness(db)
+  assert.equal(rows.length, 3)
+  assert.deepEqual(new Set(rows.map(r => r.id)), new Set(['a', 'b', 'd']))
+  // 未排序：保持 SQL 返回顺序（a,b,d）
+  assert.deepEqual(rows.map(r => r.id), ['a', 'b', 'd'])
+})
+
+test('sortFreshness 独立排序并返回新数组（合并层用）', () => {
+  const items = [
+    { id: 'x1', effectiveImportance: 5.0, accessCount: 0, importance: 3, createdAt: 'c1', lastAccessedAt: 'l1', status: 'protected' },
+    { id: 'x2', effectiveImportance: 0.5, accessCount: 0, importance: 1, createdAt: 'c2', lastAccessedAt: 'l2', status: 'normal' },
+    { id: 'x3', effectiveImportance: 2.0, accessCount: 0, importance: 2, createdAt: 'c3', lastAccessedAt: 'l3', status: 'normal' },
+  ]
+  const sorted = sortFreshness(items, { orderBy: 'effective_importance', direction: 'asc' })
+  assert.deepEqual(sorted.map(i => i.id), ['x2', 'x3', 'x1'])
+  // 不改原数组
+  assert.deepEqual(items.map(i => i.id), ['x1', 'x2', 'x3'])
+})
+
+test('sortFreshness 按 state 排序（合并层）', () => {
+  const items = [
+    { id: 'p', status: 'protected' },
+    { id: 's', status: 'superseded' },
+    { id: 'n', status: 'normal' },
+  ]
+  assert.deepEqual(sortFreshness(items, { orderBy: 'state', direction: 'asc' }).map(i => i.id), ['s', 'n', 'p'])
+  assert.deepEqual(sortFreshness(items, { orderBy: 'state', direction: 'desc' }).map(i => i.id), ['p', 'n', 's'])
+})
+
+test('sortFreshness 拒绝非法排序列/方向', () => {
+  assert.throws(() => sortFreshness([], { orderBy: 'bogus' }), /orderBy/)
+  assert.throws(() => sortFreshness([], { direction: 'sideways' }), /direction/)
 })
 
 test('forgetById 按 id 精确软删，返回是否命中', () => {

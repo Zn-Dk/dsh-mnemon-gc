@@ -2,6 +2,25 @@
 
 本项目的所有显著变更都记录在此文件。格式遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本号遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [0.2.1] - 2026-08-24
+
+### 新增
+
+- 记忆新鲜度面板支持**多 store 合并展示**：默认全选所有 active Memory Space，每行标注 store 标签；可勾选筛选单个 store（`stores` 端点枚举 + `list` 传入 `stores` 数组）。
+- store id 白名单校验与路径重派生（防注入/防目录穿越），未知/非法 store 安全回退 `default`；`list` 排序统一在合并层完成。
+- 状态 Tag 重新规划配色：**活跃**（绿色 pill）/ **正常**（主题色 pill）/ **已取代**（玫红色 pill），浅色/暗色双主题适配，字重 medium。
+
+### 变更
+
+- 详情/批量删除/单条删除确认改为官方 `Modal`；按钮/搜索框/Tooltip 全部改用官方 `@deepseek-ai/dsh-client-ui-primitives` 组件，移除 `window.confirm`。
+- 表格操作列移除，删除入口并入 hover 详情浮层（详情 + 删除）；批量删除统一放在表格上方。
+- 浮层（Modal 面板 / hover 浮层 / 状态 Tag）适配半透明主题：关键面写死不透明实色（浅色 `#fff`、暗色 `#232324`/`#2c2c2e`），不再依赖会被主题覆盖的 `bg-layer-*` token。
+
+### 修复
+
+- 修复半透明主题下 Modal 面板与 sticky 操作列透底问题。
+- 修复状态 Tag 在 Tooltip 包裹下「已取代」样式异常问题（Tag 裸渲染 + title 提示）。
+
 ## [0.2.0] - 2026-08-21
 
 ### 变更（破坏性）

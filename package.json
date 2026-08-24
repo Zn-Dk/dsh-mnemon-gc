@@ -1,6 +1,6 @@
 {
   "name": "dsh-mnemon-gc",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Mnemon 记忆体 GC 治理插件：把「冲突驱动的正确性纠错」接进 dsh-mnemon（记忆间新事实取代旧事实 → 标记 superseded → 显式确认后才软删除）。自动巡检只报告、绝不删除。基于 dsh-mnemon 的 createRunner 公共 API。",
   "type": "module",
   "main": "lib/index.js",
