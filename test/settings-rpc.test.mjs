@@ -54,6 +54,14 @@ test('mutate 拒绝非白名单字段', async () => {
   assert.equal(calls.mutate.length, 0)
 })
 
+test('mutate 接受 detectMaxTokens（新增字段进白名单）', async () => {
+  const { settings, calls } = fakeSettings()
+  const handler = createSettingsRpcHandler(settings)
+  const res = await handler('mutate', { ops: [{ op: 'set', path: ['detectMaxTokens'], value: 16384 }] })
+  assert.equal(res.ok, true)
+  assert.deepEqual(calls.mutate[0].ops, [{ op: 'set', path: ['detectMaxTokens'], value: 16384 }])
+})
+
 test('read-only settings 拒绝 mutate', async () => {
   const { settings } = fakeSettings({ writable: false })
   const handler = createSettingsRpcHandler(settings)

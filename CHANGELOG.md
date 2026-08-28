@@ -2,6 +2,13 @@
 
 本项目的所有显著变更都记录在此文件。格式遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本号遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [0.2.2] - 2026-08-28
+
+### 新增
+
+- 自动巡检支持多 store：遍历全部 active Memory Space 逐个巡检并逐 store 报告（单 store 失败不中断其余）；候选数量上限对每个 store 生效。
+- 冲突检测子代理成本配置化：新增 `detectMaxTokens` 设置（默认 8192，范围 1024–65536），透传为冲突检测子代理的输出 token 上限；dense CJK 场景可调高，成本敏感可调低。设置卡片与 settings RPC 白名单同步支持该字段。
+
 ## [0.2.1] - 2026-08-24
 
 ### 新增
